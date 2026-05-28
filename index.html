@@ -1,0 +1,1042 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GEPT High-Intermediate GSAT Test Generator</title>
+  <script src="vocab-data.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17202a;
+      --muted: #607083;
+      --line: #d8e0e8;
+      --paper: #fbfcfe;
+      --panel: #ffffff;
+      --accent: #1f7668;
+      --accent-2: #9b4d2e;
+      --good: #147a3d;
+      --bad: #b42318;
+      --soft: #eef6f3;
+      --warn: #fff5df;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: #eef2f5;
+      font-family: "Segoe UI", Arial, "Noto Sans TC", sans-serif;
+      line-height: 1.6;
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      border-radius: 7px;
+      padding: 0.55rem 0.85rem;
+      cursor: pointer;
+    }
+
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    button.ghost {
+      background: transparent;
+    }
+
+    button.option {
+      width: 100%;
+      text-align: left;
+      margin: 0.25rem 0;
+      border-color: #d7dee7;
+      min-height: 44px;
+    }
+
+    button.option.correct {
+      border-color: var(--good);
+      background: #edf9f1;
+    }
+
+    button.option.wrong {
+      border-color: var(--bad);
+      background: #fff1ef;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 0.55rem 0.65rem;
+      background: #fff;
+      color: var(--ink);
+    }
+
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+
+    .shell {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: rgba(238, 242, 245, 0.96);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(12px);
+    }
+
+    .topbar-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 10px 20px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: clamp(1.15rem, 2.5vw, 1.65rem);
+      letter-spacing: 0;
+    }
+
+    .brand p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: end;
+    }
+
+    .settings {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      padding: 16px 0 10px;
+    }
+
+    .wide-field {
+      grid-column: span 5;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+
+    .notice {
+      background: var(--warn);
+      border: 1px solid #efd8a9;
+      border-radius: 8px;
+      padding: 12px 14px;
+      color: #654b15;
+      margin-bottom: 16px;
+    }
+
+    .exam {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 22px;
+      box-shadow: 0 16px 36px rgba(22, 31, 43, 0.08);
+    }
+
+    .exam-title {
+      text-align: center;
+      border-bottom: 2px solid var(--ink);
+      padding-bottom: 18px;
+      margin-bottom: 20px;
+    }
+
+    .exam-title h2 {
+      margin: 0;
+      font-size: 1.35rem;
+    }
+
+    .exam-title p {
+      margin: 4px 0 0;
+      color: var(--muted);
+    }
+
+    .part {
+      margin-top: 26px;
+      padding-top: 8px;
+      border-top: 1px solid var(--line);
+    }
+
+    .part h3 {
+      margin: 0 0 4px;
+      font-size: 1.15rem;
+    }
+
+    .directions {
+      color: var(--muted);
+      margin: 0 0 14px;
+      font-size: 0.95rem;
+    }
+
+    .group-title {
+      margin: 18px 0 8px;
+      font-weight: 800;
+    }
+
+    .passage {
+      background: #fff;
+      border-left: 4px solid var(--accent);
+      padding: 14px 16px;
+      margin: 12px 0 16px;
+      white-space: pre-line;
+    }
+
+    .question {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      margin: 12px 0;
+    }
+
+    .question strong.qno {
+      display: inline-block;
+      min-width: 2.3rem;
+    }
+
+    .options {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px 10px;
+      margin-top: 8px;
+    }
+
+    .feedback {
+      display: none;
+      margin-top: 10px;
+      border-top: 1px solid var(--line);
+      padding-top: 10px;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .feedback.show {
+      display: block;
+    }
+
+    .feedback b {
+      color: var(--ink);
+    }
+
+    .word-bank {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+      margin: 12px 0 16px;
+    }
+
+    .bank-item {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 7px;
+      padding: 8px 10px;
+      font-weight: 700;
+    }
+
+    .answer-line {
+      display: grid;
+      grid-template-columns: 70px 1fr auto;
+      gap: 8px;
+      align-items: center;
+      margin: 8px 0;
+    }
+
+    .mixed-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 12px 0;
+    }
+
+    .shop {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 11px;
+      background: #fff;
+    }
+
+    .lookup {
+      border-bottom: 1px dotted #7b8b9c;
+      cursor: help;
+    }
+
+    .lookup:hover {
+      background: var(--soft);
+    }
+
+    .lookup-panel {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      width: min(360px, calc(100vw - 36px));
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 18px 48px rgba(22, 31, 43, 0.18);
+      padding: 14px;
+      z-index: 10;
+      display: none;
+    }
+
+    .lookup-panel.show {
+      display: block;
+    }
+
+    .lookup-panel h4 {
+      margin: 0 0 4px;
+      font-size: 1.1rem;
+    }
+
+    .lookup-panel p {
+      margin: 4px 0;
+      color: var(--muted);
+    }
+
+    .scorebar {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin: 16px 0;
+    }
+
+    .score {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .score b {
+      display: block;
+      font-size: 1.35rem;
+      color: var(--accent);
+    }
+
+    .print-only {
+      display: none;
+    }
+
+    @media (max-width: 820px) {
+      .topbar-inner, .settings, .scorebar, .mixed-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .options, .word-bank {
+        grid-template-columns: 1fr;
+      }
+
+      .actions {
+        justify-content: start;
+      }
+
+      .exam {
+        padding: 14px;
+      }
+
+      .answer-line {
+        grid-template-columns: 58px 1fr;
+      }
+
+      .answer-line button {
+        grid-column: 2;
+      }
+    }
+
+    @media print {
+      body { background: #fff; }
+      .topbar, .notice, .lookup-panel, .feedback, button, .settings, .scorebar { display: none !important; }
+      .shell { padding: 0; max-width: none; }
+      .exam { border: 0; box-shadow: none; }
+      .question { break-inside: avoid; }
+      .print-only { display: block; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <h1>GEPT High-Intermediate GSAT Test Generator</h1>
+        <p>Choose a vocabulary batch, generate a Taiwan GSAT-style interactive English test, then upload this folder to GitHub Pages.</p>
+      </div>
+      <div class="actions">
+        <button class="primary" id="generateBtn">Generate</button>
+        <button id="downloadDocBtn">Download Word Worksheet</button>
+        <button id="submitBtn">Finish & Submit</button>
+        <button id="resetBtn">Reset Answers</button>
+        <button id="printBtn">Print / PDF</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="settings" aria-label="Generator settings">
+      <div class="field">
+        <label for="startNo">First GEPT word number</label>
+        <input id="startNo" type="number" min="1" value="1">
+      </div>
+      <div class="field">
+        <label for="batchSize">Batch size</label>
+        <input id="batchSize" type="number" min="50" max="220" value="80">
+      </div>
+      <div class="field">
+        <label for="seed">Version code</label>
+        <input id="seed" type="text" value="A">
+      </div>
+      <div class="field">
+        <label for="studentName">Student name</label>
+        <input id="studentName" type="text" placeholder="optional">
+      </div>
+      <div class="field">
+        <label for="mode">Feedback mode</label>
+        <select id="mode">
+          <option value="immediate">Immediate feedback</option>
+          <option value="practice">Show explanations after each answer</option>
+        </select>
+      </div>
+      <div class="field wide-field">
+        <label for="sheetEndpoint">Google Sheets receiver URL</label>
+        <input id="sheetEndpoint" type="url" placeholder="Paste Apps Script web app URL after setup">
+      </div>
+    </section>
+
+    <div class="notice">
+      Click any English word in passages or questions to open the lookup panel. GEPT words show Chinese meaning and part of speech; other words include quick dictionary links.
+    </div>
+    <div class="notice" id="submitStatus" aria-live="polite">
+      Result recording is ready after the Google Apps Script receiver URL is pasted above.
+    </div>
+
+    <section class="scorebar">
+      <div class="score"><span>Answered</span><b id="answeredCount">0</b></div>
+      <div class="score"><span>Correct</span><b id="correctCount">0</b></div>
+      <div class="score"><span>Accuracy</span><b id="accuracy">0%</b></div>
+      <div class="score"><span>Batch words</span><b id="batchRange">1-80</b></div>
+    </section>
+
+    <article class="exam" id="exam"></article>
+  </main>
+
+  <aside class="lookup-panel" id="lookupPanel" aria-live="polite">
+    <button class="ghost" style="float:right;padding:0.2rem 0.45rem" id="closeLookup">×</button>
+    <h4 id="lookupWord">word</h4>
+    <p id="lookupMeta"></p>
+    <p id="lookupMeaning"></p>
+    <p id="lookupLinks"></p>
+  </aside>
+
+  <script>
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    const vocab = Array.isArray(window.GEPT_VOCAB) ? window.GEPT_VOCAB : [];
+    const vocabMap = new Map(vocab.map(item => [item.word.toLowerCase(), item]));
+    const DEFAULT_SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbwVu-U9iqgVL8-6x6j7nMxdsQysKZ1Djn1ZnVR9t8Ov3wM10rbkevXb-xGD8FgCjZBN/exec";
+    const STORAGE_ENDPOINT_KEY = "geptGsatSheetEndpoint";
+    let state = { answers: new Map(), questions: [], lookups: new Set(), batchLabel: "1-80", version: "A" };
+
+    function normalizePos(pos) {
+      const text = String(pos || "").toLowerCase();
+      if (text.includes("adv")) return "adv.";
+      if (text.includes("adj")) return "adj.";
+      if (text.includes("v")) return "v.";
+      if (text.includes("n")) return "n.";
+      return "word";
+    }
+
+    function seedNumber(seed) {
+      return String(seed || "A").split("").reduce((sum, ch) => sum + ch.charCodeAt(0), 0) || 65;
+    }
+
+    function makeRng(seed) {
+      let x = seedNumber(seed) + 1234567;
+      return () => {
+        x ^= x << 13; x ^= x >>> 17; x ^= x << 5;
+        return ((x < 0 ? ~x + 1 : x) % 100000) / 100000;
+      };
+    }
+
+    function shuffle(list, rng) {
+      const copy = [...list];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(rng() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function escapeHtml(text) {
+      return String(text ?? "").replace(/[&<>"']/g, ch => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[ch]));
+    }
+
+    function clickable(text) {
+      return escapeHtml(text).replace(/\b[A-Za-z][A-Za-z'-]*\b/g, word => {
+        const clean = word.toLowerCase().replace(/^'+|'+$/g, "");
+        return `<span class="lookup" data-word="${escapeHtml(clean)}">${word}</span>`;
+      });
+    }
+
+    function pickByPos(batch, pos, count, rng, avoid = []) {
+      const avoidSet = new Set(avoid.map(w => w.word));
+      let pool = batch.filter(w => normalizePos(w.pos) === pos && !avoidSet.has(w.word));
+      if (pool.length < count) {
+        pool = vocab.filter(w => normalizePos(w.pos) === pos && !avoidSet.has(w.word));
+      }
+      return shuffle(pool, rng).slice(0, count);
+    }
+
+    function wordAt(batch, index, fallbackPos, rng) {
+      if (batch[index]) return batch[index];
+      return pickByPos(batch, fallbackPos, 1, rng)[0] || vocab[index % vocab.length];
+    }
+
+    function optionSet(answer, batch, rng, count = 4) {
+      const pos = normalizePos(answer.pos);
+      const distractors = pickByPos(batch, pos, count - 1, rng, [answer]);
+      return shuffle([answer, ...distractors], rng).map((item, idx) => ({
+        letter: letters[idx],
+        text: item.word,
+        word: item,
+        correct: item.word === answer.word
+      }));
+    }
+
+    function explainOptions(options, answer) {
+      return options.map(opt => {
+        const mark = opt.correct ? "Correct" : "Not here";
+        const reason = opt.correct
+          ? `It matches the context and means ${opt.word.zh || "the intended meaning"}.`
+          : `It means ${opt.word.zh || "a different idea"}, so it changes the sentence meaning.`;
+        return `<div><b>${opt.letter}. ${escapeHtml(opt.text)}</b> (${escapeHtml(opt.word.pos)}): ${escapeHtml(reason)}</div>`;
+      }).join("");
+    }
+
+    function addQuestion(list, q) {
+      list.push(q);
+      return q;
+    }
+
+    function vocabStem(word, idx) {
+      const pos = normalizePos(word.pos);
+      const stems = {
+        "n.": [
+          `The research team reached a clear ______ after comparing the new data with earlier reports.`,
+          `The museum guide explained that the object had become an important ______ of local history.`,
+          `The school created a new ______ to support students who need extra practice.`
+        ],
+        "v.": [
+          `City officials hope the new policy will ______ traffic pressure near the train station.`,
+          `The speaker tried to ______ the main point with a simple story from daily life.`,
+          `Students were asked to ______ their ideas before joining the group discussion.`
+        ],
+        "adj.": [
+          `The article presents a ______ view of the issue and avoids emotional language.`,
+          `The hikers chose a ______ route after weather reports warned of heavy rain.`,
+          `A ______ explanation helped the audience understand the complicated process.`
+        ],
+        "adv.": [
+          `The coach reminded the players to listen ______ before making their next move.`,
+          `The company responded ______ after customers reported the problem online.`,
+          `The witness described the event ______, giving details about time and place.`
+        ],
+        "word": [
+          `The blank requires the word that best completes the meaning of the sentence: ______.`
+        ]
+      };
+      const group = stems[pos] || stems.word;
+      return group[idx % group.length];
+    }
+
+    function clozePassage(topic, words, startNo) {
+      if (topic === "urban") {
+        return {
+          title: `Questions ${startNo} to ${startNo + 4}`,
+          text: `A small riverside town was once known mainly for its quiet streets and old warehouses. In recent years, however, local leaders have tried to make the area more welcoming to young families and visitors. Their first step was to ${blank(startNo)} empty buildings into studios, reading rooms, and small cafés. The change did not happen overnight. Some residents worried that new businesses would ${blank(startNo + 1)} the peaceful rhythm of daily life. Others argued that careful planning could protect tradition while bringing fresh energy.\n\nThe town council therefore invited shop owners, artists, and teachers to join public meetings. ${blank(startNo + 2)}, people who had rarely spoken to one another began to exchange ideas. They agreed that the river path should remain open to everyone and that signs should be written in clear language. The project became more ${blank(startNo + 3)} when students volunteered to record oral histories from older residents. By the end of the year, the town had gained not only new shops but also a stronger sense of ${blank(startNo + 4)}.`,
+          words
+        };
+      }
+      return {
+        title: `Questions ${startNo} to ${startNo + 4}`,
+        text: `Scientists studying sleep have found that a short rest can be more powerful than many people expect. A brief nap may help the brain ${blank(startNo)} recently learned information and prepare for another period of attention. The benefit, however, depends on timing. A nap that is too long can leave a person feeling heavy and ${blank(startNo + 1)}, especially when it interrupts deep sleep.\n\nResearchers also point out that the sleeping environment matters. A dark room with little noise allows the body to relax more ${blank(startNo + 2)}. For students, this does not mean sleeping through the afternoon. ${blank(startNo + 3)}, it means using a short break wisely before returning to work. When combined with regular nighttime sleep, a planned nap can become a practical ${blank(startNo + 4)} for memory and health.`,
+        words
+      };
+    }
+
+    function blank(no) {
+      return `[ ${no} ]`;
+    }
+
+    function generateTest() {
+      const start = Math.max(1, Number(document.getElementById("startNo").value || 1));
+      const size = Math.max(50, Number(document.getElementById("batchSize").value || 80));
+      const seed = document.getElementById("seed").value || "A";
+      const rng = makeRng(seed + start + size);
+      const batch = vocab.slice(start - 1, start - 1 + size);
+      const batchLabel = `${start}-${Math.min(start + size - 1, vocab.length)}`;
+      document.getElementById("batchRange").textContent = batchLabel;
+      state = { answers: new Map(), questions: [], lookups: new Set(), batchLabel, version: seed };
+
+      const qs = [];
+      const byUseful = shuffle(batch.filter(w => ["n.", "v.", "adj.", "adv."].includes(normalizePos(w.pos))), rng);
+
+      for (let i = 0; i < 10; i++) {
+        const answer = byUseful[i] || wordAt(batch, i, "n.", rng);
+        const options = optionSet(answer, batch, rng);
+        addQuestion(qs, {
+          no: i + 1,
+          type: "mcq",
+          stem: vocabStem(answer, i),
+          options,
+          answer: options.find(o => o.correct).letter,
+          feedback: explainOptions(options, answer)
+        });
+      }
+
+      const clozeAnswers = byUseful.slice(10, 20);
+      const cloze1 = clozePassage("urban", clozeAnswers.slice(0, 5), 11);
+      const cloze2 = clozePassage("sleep", clozeAnswers.slice(5, 10), 16);
+      [cloze1, cloze2].forEach((passage, groupIndex) => {
+        passage.words.forEach((answer, i) => {
+          const no = 11 + groupIndex * 5 + i;
+          const options = optionSet(answer, batch, rng);
+          addQuestion(qs, {
+            no,
+            type: "mcq",
+            stem: "",
+            options,
+            answer: options.find(o => o.correct).letter,
+            feedback: explainOptions(options, answer)
+          });
+        });
+      });
+
+      const bankAnswers = byUseful.slice(20, 30);
+      const discourseAnswers = [
+        "For most communities, public trust grows slowly through repeated cooperation.",
+        "In fact, a single shared project can connect people from very different backgrounds.",
+        "Another important factor is whether newcomers feel invited to participate.",
+        "This is why successful community spaces often combine practical design with emotional meaning."
+      ];
+      const discourseDistractor = "Experts agree that every old building should be replaced by a larger modern one.";
+
+      const readingWords = byUseful.slice(30, 48);
+      const reading = makeReading(readingWords);
+      reading.questions.forEach(q => addQuestion(qs, q));
+
+      state.questions = qs;
+      renderExam({ batch, qs, cloze1, cloze2, bankAnswers, discourseAnswers, discourseDistractor, reading, start, size, seed });
+      updateScore();
+    }
+
+    function makeReading(words) {
+      const w = i => words[i] || vocab[i + 100];
+      const passages = [
+        {
+          range: "35 to 38",
+          text: `In 1897, a group of researchers traveled to a remote island to study how storms shaped the coastline. Their ship carried simple instruments, notebooks, and enough food for six months. At first, the work seemed routine. The team measured waves, mapped rocks, and interviewed families who had lived near the harbor for generations.\n\nEverything changed after a violent typhoon damaged the only pier. The researchers had to ${w(0).word} their schedule and move supplies by hand. Although the delay was frustrating, it gave them time to observe how residents solved problems together. Fishermen repaired boats, children carried messages, and shopkeepers shared food without being asked.\n\nWhen the team returned home, their report was not only about weather. It also described the islanders' ${w(1).word} response to danger and their ability to protect one another. Later engineers used the report to design safer coastal paths. The island became an example of how scientific study can reveal both natural forces and human strength.`,
+          questions: [
+            ["What is the passage mainly about?", ["A research trip that revealed community cooperation", "A new machine for predicting typhoons", "The history of fishing in a harbor", "A conflict between scientists and residents"], "A"],
+            [`Which word is closest in meaning to "${w(0).word}" in the passage?`, [w(0).zh || "change", "celebrate", "ignore", "decorate"], "A"],
+            ["What did children do after the pier was damaged?", ["They carried messages.", "They repaired boats.", "They designed coastal paths.", "They left the island."], "A"],
+            ["What can be inferred from the passage?", ["The researchers learned more than they originally expected.", "The typhoon destroyed every house on the island.", "The residents refused to help the research team.", "The island had no experience with storms."], "A"]
+          ]
+        },
+        {
+          range: "39 to 42",
+          text: `Before printed maps became common, travelers often depended on songs, stories, and landmarks. In mountain villages, elders described routes by naming trees, bridges, and turns in the river. These descriptions were not casual. They were a practical ${w(2).word} that helped people move safely through difficult land.\n\nModern navigation apps may seem completely different, but they still depend on selected information. A screen cannot show every stone or shop. Designers must decide what to include and what to leave out. If the display is too crowded, users become confused. If it is too simple, they may miss an important detail.\n\nThis balance explains why map design remains a serious field. Good maps are not just copies of places. They are organized arguments about what matters for a particular journey. Whether drawn on paper or shown on a phone, a useful map must ${w(3).word} the traveler's purpose.`,
+          questions: [
+            ["Which question can the passage answer?", ["Why must map designers choose information carefully?", "Who invented the first mobile phone map?", "Which country has the oldest bridge?", "How many trees appear on ancient maps?"], "A"],
+            ['What does "they" in the second paragraph refer to?', ["Modern navigation apps", "Mountain villages", "Songs", "Travelers"], "A"],
+            ["According to the passage, what happens if a map display is too crowded?", ["Users become confused.", "Users walk faster.", "Landmarks disappear.", "The app stops working."], "A"],
+            ["What can be inferred about good maps?", ["They are designed for specific needs.", "They should include every visible object.", "They are useful only on paper.", "They avoid showing landmarks."], "A"]
+          ]
+        },
+        {
+          range: "43 to 46",
+          text: `In many schools, gardens have become outdoor classrooms. Students plant vegetables, record insect activity, and compare soil conditions after rain. These lessons are popular because they connect abstract ideas with visible results. A seedling that grows slowly can teach patience more effectively than a lecture.\n\nTeachers also use gardens to build language skills. Students describe colors, write observation notes, and explain changes to classmates. For English learners, the garden provides a meaningful reason to use new vocabulary. A word such as ${w(4).word} becomes easier to remember when it is tied to a real object or action.\n\nThe most successful programs are not simply beautiful spaces. They include clear routines, shared tools, and chances for reflection. When students understand why they are working outside, the garden becomes more than a break from the classroom. It becomes a living text that invites careful reading.`,
+          questions: [
+            ["What is this passage mainly about?", ["How school gardens support learning", "Why vegetables grow after rain", "The history of classroom furniture", "The cost of building city parks"], "A"],
+            ['What does "it" in the last paragraph refer to?', ["The garden", "A tool", "A lecture", "A word"], "A"],
+            ["Which activity is mentioned in the passage?", ["Recording insect activity", "Selling vegetables online", "Drawing maps of Europe", "Repairing classroom desks"], "A"],
+            ['Which phrase is closest in meaning to "a living text"?', ["A place students can observe and interpret", "A book about plants", "A rule that never changes", "A test with only one answer"], "A"]
+          ]
+        }
+      ];
+      let no = 35;
+      const questions = [];
+      passages.forEach((p, pi) => {
+        p.questions.forEach(item => {
+          const opts = item[1].map((text, idx) => ({ letter: letters[idx], text, correct: letters[idx] === item[2], word: { pos: "", zh: text } }));
+          questions.push({ no: no++, type: "mcq", stem: item[0], options: opts, answer: item[2], feedback: explainReading(opts, item[2]) });
+        });
+      });
+      return { passages, questions };
+    }
+
+    function explainReading(options, answer) {
+      return options.map(opt => {
+        const reason = opt.letter === answer ? "Supported by the passage." : "This option is not supported by the passage or changes an important detail.";
+        return `<div><b>${opt.letter}. ${escapeHtml(opt.text)}</b>: ${reason}</div>`;
+      }).join("");
+    }
+
+    function renderExam(data) {
+      const student = document.getElementById("studentName").value.trim();
+      const exam = document.getElementById("exam");
+      const title = `
+        <div class="exam-title">
+          <h2>115 GSAT-Style English Practice Test</h2>
+          <p>GEPT High-Intermediate Vocabulary Batch ${data.start}-${Math.min(data.start + data.size - 1, vocab.length)} · Version ${escapeHtml(data.seed)}${student ? " · " + escapeHtml(student) : ""}</p>
+          <p class="print-only">Answers are hidden in print mode for classroom use.</p>
+        </div>`;
+
+      const vocabHtml = section("第壹部分、選擇題", "一、詞彙題（第1題至第10題）", "Choose the best word to complete each sentence.", data.qs.filter(q => q.no <= 10).map(renderQuestion).join(""));
+
+      const clozeHtml = section("", "二、綜合測驗（第11題至第20題）", "Read each passage and choose the best answer for each blank.",
+        renderCloze(data.cloze1) + data.qs.filter(q => q.no >= 11 && q.no <= 15).map(renderQuestion).join("") +
+        renderCloze(data.cloze2) + data.qs.filter(q => q.no >= 16 && q.no <= 20).map(renderQuestion).join(""));
+
+      const bankHtml = section("", "三、文意選填（第21題至第30題）", "Use the word bank. Each option is used once.",
+        renderWordBank(data.bankAnswers) + renderCompletion(data.bankAnswers));
+
+      const discourseHtml = section("", "四、篇章結構（第31題至第34題）", "Choose the best sentence for each blank. One option is not used.",
+        renderDiscourse(data.discourseAnswers, data.discourseDistractor));
+
+      const readingHtml = section("", "五、閱讀測驗（第35題至第46題）", "Read the passages and answer the questions.",
+        renderReadings(data.reading, data.qs));
+
+      const mixedHtml = section("第貳部分、混合題", "第47題至第50題", "Use the map-like store descriptions and answer the mixed questions.",
+        renderMixed(data.batch));
+
+      const writingHtml = section("第參部分、非選擇題", "中譯英與英文作文", "These writing tasks are not auto-scored, but students can type their drafts here.",
+        renderWriting(data.batch));
+
+      exam.innerHTML = title + vocabHtml + clozeHtml + bankHtml + discourseHtml + readingHtml + mixedHtml + writingHtml;
+      attachLookupHandlers();
+    }
+
+    function section(part, heading, directions, body) {
+      return `<section class="part">${part ? `<h3>${escapeHtml(part)}</h3>` : ""}<h3>${escapeHtml(heading)}</h3><p class="directions">${escapeHtml(directions)}</p>${body}</section>`;
+    }
+
+    function renderQuestion(q) {
+      const stem = q.stem ? `<p><strong class="qno">${q.no}.</strong>${clickable(q.stem)}</p>` : `<p><strong class="qno">${q.no}.</strong></p>`;
+      const options = q.options.map(opt => `<button class="option" data-q="${q.no}" data-choice="${opt.letter}">(${opt.letter}) ${clickable(opt.text)}</button>`).join("");
+      return `<div class="question" data-question="${q.no}">${stem}<div class="options">${options}</div><div class="feedback" id="fb-${q.no}"></div></div>`;
+    }
+
+    function renderCloze(passage) {
+      return `<div class="group-title">${escapeHtml(passage.title)}</div><div class="passage">${clickable(passage.text)}</div>`;
+    }
+
+    function renderWordBank(words) {
+      const items = shuffle(words, makeRng("bank")).map((w, idx) => `<div class="bank-item">(${letters[idx]}) ${clickable(w.word)}</div>`).join("");
+      return `<div class="word-bank">${items}</div>`;
+    }
+
+    function renderCompletion(words) {
+      const text = `Many people think creativity appears suddenly, but it usually grows from steady practice. A learner first needs a clear ${blank(21)} and enough patience to try again after failure. In language learning, repeated contact with useful words can ${blank(22)} memory and make expression more natural.\n\nA good study plan should also be ${blank(23)}. Students may read short articles, listen to speeches, and explain ideas to partners. These different tasks help them notice how words behave in real contexts. When a word seems difficult, students should not simply copy a translation. They should ask how the word functions in a sentence and what feeling it carries.\n\nTeachers can support this process by giving ${blank(24)} feedback. Instead of only marking mistakes, they can point out why one word fits better than another. Over time, students build a wider ${blank(25)} of vocabulary choices. They become more willing to revise, compare, and take risks. This habit can ${blank(26)} their confidence, especially when they face long reading passages. With enough practice, new words become ${blank(27)} tools rather than isolated items on a list. The result is a more ${blank(28)} command of English, which can ${blank(29)} academic reading and everyday communication. Such growth is not magic; it is the ${blank(30)} of careful, repeated use.`;
+      const answers = words.slice(0, 10);
+      return `<div class="passage">${clickable(text)}</div>` + answers.map((w, i) => renderTextAnswer(21 + i, w.word, `Answer: ${w.word} (${w.pos}) means ${w.zh}. It is placed here because its part of speech and meaning fit the sentence.`)).join("");
+    }
+
+    function renderTextAnswer(no, answer, feedback) {
+      return `<div class="question" data-question="${no}"><div class="answer-line"><strong>${no}.</strong><input data-text-q="${no}" data-answer="${escapeHtml(answer.toLowerCase())}" placeholder="type answer"><button data-check-text="${no}">Check</button></div><div class="feedback" id="fb-${no}">${escapeHtml(feedback)}</div></div>`;
+    }
+
+    function renderDiscourse(correct, distractor) {
+      const options = shuffle([...correct, distractor], makeRng("discourse"));
+      const bank = options.map((s, i) => `<div class="bank-item">(${letters[i]}) ${clickable(s)}</div>`).join("");
+      const text = `A community library is more than a room filled with books. It can serve as a meeting point where residents share knowledge, solve problems, and discover common interests. ${blank(31)}\n\nThis role becomes especially important when a neighborhood changes quickly. New shops, new families, and new technologies may alter the rhythm of daily life. ${blank(32)} A library that offers language classes, local history projects, and public talks can reduce the distance between old and new residents.\n\nDesign also matters. Comfortable chairs and clear signs may seem simple, but they affect whether people stay long enough to talk. ${blank(33)} When people feel that the space belongs to them, they are more likely to protect and improve it.\n\n${blank(34)} The best public spaces do not force people to become the same. They give people a reason to listen to one another.`;
+      const answerLetters = correct.map(s => letters[options.indexOf(s)]);
+      return `<div class="word-bank">${bank}</div><div class="passage">${clickable(text)}</div>` +
+        correct.map((s, i) => renderTextAnswer(31 + i, answerLetters[i], `Correct sentence: ${letters[options.indexOf(s)]}. ${s}`)).join("");
+    }
+
+    function renderReadings(reading, qs) {
+      let html = "";
+      reading.passages.forEach((p, idx) => {
+        const startNo = 35 + idx * 4;
+        html += `<div class="group-title">Questions ${p.range}</div><div class="passage">${clickable(p.text)}</div>`;
+        html += qs.filter(q => q.no >= startNo && q.no < startNo + 4).map(renderQuestion).join("");
+      });
+      return html;
+    }
+
+    function renderMixed(batch) {
+      const stores = [
+        ["A", "Green Corner", "Reusable bottles, bamboo toothbrushes, recycled plastic sunglasses, and soy candles."],
+        ["B", "After Class", "Handcrafted drinks, flatbread pizza, and snacks for groups after school."],
+        ["C", "Scent Room", "Customized fragrances and small gifts made for personal preferences."],
+        ["D", "Old Light", "Antique lamps, wooden chairs, picture frames, and decorative mirrors."],
+        ["E", "Local Hands", "Necklaces, woven bags, rice snacks, and crafts by indigenous makers."],
+        ["F", "Pine Table", "Meals using pineapple jam, local fruit, and modern cooking ideas."]
+      ];
+      const cards = stores.map(s => `<div class="shop"><b>${s[0]}. ${s[1]}</b><p>${clickable(s[2])}</p></div>`).join("");
+      return `<div class="mixed-grid">${cards}</div>
+        ${renderTextAnswer(47, "modernity", "A suitable answer is modernity, because the village combines old traditions with new commercial life.")}
+        ${renderTextAnswer(48, "blended", "A suitable answer is blended, because local features are mixed with newer or foreign elements.")}
+        <div class="question" data-question="49"><p><strong class="qno">49.</strong>The Lin family wants recycled plastic sunglasses, an antique oil lamp, and an indigenous necklace. Which stores should they visit?</p>
+          <div class="options">
+            ${["A,D,E", "A,B,C", "B,D,F", "C,E,F"].map((text, idx) => `<button class="option" data-q="49" data-choice="${letters[idx]}">(${letters[idx]}) ${text}</button>`).join("")}
+          </div><div class="feedback" id="fb-49">Correct answer: A, D, and E. A sells recycled sunglasses, D sells antiques, and E sells indigenous crafts.</div></div>
+        ${renderTextAnswer(50, "one of a kind", "Joseph Tang's phrase is one of a kind, meaning each store is unique.")}`;
+    }
+
+    function renderWriting(batch) {
+      const w1 = batch[0] || vocab[0];
+      const w2 = batch[1] || vocab[1];
+      return `<div class="question"><p><b>1. Chinese-English Translation</b></p>
+        <p>${clickable(`越來越多高中英文老師設計互動活動，幫助學生更自然地使用 ${w1.word} and ${w2.word}.`)}</p>
+        <textarea placeholder="Type your translation here"></textarea></div>
+        <div class="question"><p><b>2. English Composition</b></p>
+        <p>${clickable("Write at least 120 words about how students can use vocabulary learning to understand the world around them. In paragraph one, describe a learning situation. In paragraph two, explain the reasons and possible effects.")}</p>
+        <textarea placeholder="Type your composition here"></textarea></div>`;
+    }
+
+    function attachLookupHandlers() {
+      document.querySelectorAll(".lookup").forEach(el => {
+        el.addEventListener("click", event => {
+          event.stopPropagation();
+          showLookup(el.dataset.word || el.textContent);
+        });
+      });
+    }
+
+    function showLookup(raw) {
+      const word = String(raw || "").toLowerCase().replace(/[^a-z'-]/g, "");
+      if (word) state.lookups.add(word);
+      const item = vocabMap.get(word);
+      document.getElementById("lookupWord").textContent = word;
+      if (item) {
+        document.getElementById("lookupMeta").textContent = `GEPT #${item.number} · ${item.pos}`;
+        document.getElementById("lookupMeaning").textContent = item.zh || "No Chinese meaning listed.";
+        document.getElementById("lookupLinks").innerHTML = `<a href="https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(word)}" target="_blank" rel="noopener">Cambridge</a> · <a href="https://www.merriam-webster.com/dictionary/${encodeURIComponent(word)}" target="_blank" rel="noopener">Merriam-Webster</a>`;
+      } else {
+        document.getElementById("lookupMeta").textContent = "Not found in this GEPT list.";
+        document.getElementById("lookupMeaning").textContent = "Use the dictionary links for a full definition and pronunciation.";
+        document.getElementById("lookupLinks").innerHTML = `<a href="https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(word)}" target="_blank" rel="noopener">Cambridge</a> · <a href="https://translate.google.com/?sl=en&tl=zh-TW&text=${encodeURIComponent(word)}&op=translate" target="_blank" rel="noopener">Google Translate</a>`;
+      }
+      document.getElementById("lookupPanel").classList.add("show");
+    }
+
+    function handleChoice(button) {
+      const qno = Number(button.dataset.q);
+      const choice = button.dataset.choice;
+      const q = state.questions.find(item => item.no === qno);
+      const correct = q ? q.answer : "A";
+      const holder = document.querySelector(`[data-question="${qno}"]`);
+      holder.querySelectorAll(".option").forEach(btn => {
+        btn.classList.toggle("correct", btn.dataset.choice === correct);
+        btn.classList.toggle("wrong", btn === button && choice !== correct);
+      });
+      const fb = document.getElementById(`fb-${qno}`);
+      fb.innerHTML = `${choice === correct ? "<b>Correct.</b>" : `<b>Try again.</b> Correct answer: ${correct}.`}<br>${q ? q.feedback : fb.innerHTML}`;
+      fb.classList.add("show");
+      state.answers.set(qno, choice === correct);
+      updateScore();
+    }
+
+    function checkText(no) {
+      const input = document.querySelector(`[data-text-q="${no}"]`);
+      const expected = input.dataset.answer.toLowerCase();
+      const guess = input.value.trim().toLowerCase();
+      const ok = guess === expected || (expected.includes(",") && expected.split(",").map(x => x.trim()).includes(guess));
+      const fb = document.getElementById(`fb-${no}`);
+      fb.classList.add("show");
+      fb.style.color = ok ? "var(--good)" : "var(--bad)";
+      state.answers.set(no, ok);
+      updateScore();
+    }
+
+    function updateScore() {
+      const answered = state.answers.size;
+      const correct = [...state.answers.values()].filter(Boolean).length;
+      document.getElementById("answeredCount").textContent = answered;
+      document.getElementById("correctCount").textContent = correct;
+      document.getElementById("accuracy").textContent = answered ? `${Math.round(correct / answered * 100)}%` : "0%";
+    }
+
+    function getEndpoint() {
+      return document.getElementById("sheetEndpoint").value.trim() || DEFAULT_SHEET_ENDPOINT;
+    }
+
+    function getQuestionAnswer(qno) {
+      const mcq = state.questions.find(item => item.no === qno);
+      if (mcq) {
+        const answerOption = mcq.options.find(opt => opt.letter === mcq.answer);
+        return answerOption ? `${mcq.answer}. ${answerOption.text}` : mcq.answer;
+      }
+      const input = document.querySelector(`[data-text-q="${qno}"]`);
+      return input ? input.dataset.answer : "";
+    }
+
+    function finalizeAnswers() {
+      const nodes = [...document.querySelectorAll("[data-question]")];
+      const incorrect = [];
+      nodes.forEach(node => {
+        const qno = Number(node.dataset.question);
+        if (!state.answers.has(qno)) {
+          const input = document.querySelector(`[data-text-q="${qno}"]`);
+          if (input) {
+            const expected = input.dataset.answer.toLowerCase();
+            const guess = input.value.trim().toLowerCase();
+            const ok = guess === expected || (expected.includes(",") && expected.split(",").map(x => x.trim()).includes(guess));
+            state.answers.set(qno, ok);
+          } else {
+            state.answers.set(qno, false);
+          }
+        }
+        if (!state.answers.get(qno)) incorrect.push(`${qno}: ${getQuestionAnswer(qno)}`);
+      });
+      updateScore();
+      const total = nodes.length || 1;
+      const correct = [...state.answers.values()].filter(Boolean).length;
+      return { total, correct, percentage: Math.round((correct / total) * 100), incorrect };
+    }
+
+    async function submitResults() {
+      const status = document.getElementById("submitStatus");
+      const endpoint = getEndpoint();
+      const studentName = document.getElementById("studentName").value.trim();
+      if (!studentName) {
+        status.textContent = "Please enter the student name before submitting.";
+        return;
+      }
+      if (!endpoint) {
+        status.textContent = "Please paste the Google Apps Script web app URL before submitting results.";
+        return;
+      }
+      const summary = finalizeAnswers();
+      const payload = {
+        dateTime: new Date().toLocaleString("zh-TW", { hour12: false }),
+        studentName,
+        unitAlphabetNum: `GEPT ${state.batchLabel} Version ${state.version}`,
+        percentage: `${summary.percentage}%`,
+        incorrectWords: summary.incorrect.join("; "),
+        lookUpWords: [...state.lookups].join(", ")
+      };
+      status.textContent = "Submitting results...";
+      try {
+        await fetch(endpoint, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+        status.textContent = "Results submitted. Please check the quiz result tab in the Google Sheet.";
+      } catch (error) {
+        status.textContent = "Submission did not complete. Please check the Apps Script URL and internet connection.";
+      }
+    }
+
+    function downloadWordWorksheet() {
+      const clone = document.getElementById("exam").cloneNode(true);
+      clone.querySelectorAll(".feedback, textarea, input").forEach(node => {
+        if (node.tagName === "TEXTAREA") {
+          const lines = document.createElement("div");
+          lines.innerHTML = "<br><br>____________________________________________________________<br><br>____________________________________________________________<br><br>____________________________________________________________";
+          node.replaceWith(lines);
+        } else {
+          node.remove();
+        }
+      });
+      clone.querySelectorAll("button.option").forEach(button => {
+        const line = document.createElement("div");
+        line.textContent = button.textContent;
+        button.replaceWith(line);
+      });
+      clone.querySelectorAll(".lookup").forEach(span => {
+        const text = document.createTextNode(span.textContent);
+        span.replaceWith(text);
+      });
+      const answerKey = buildAnswerKey();
+      const html = `<!doctype html><html><head><meta charset="utf-8"><title>GEPT GSAT Worksheet</title>
+        <style>
+          body{font-family:Arial,'Noto Sans TC',sans-serif;line-height:1.55;color:#111;}
+          h2,h3{text-align:left;} .exam-title{text-align:center;border-bottom:2px solid #111;margin-bottom:18px;}
+          .part{margin-top:22px;border-top:1px solid #bbb;padding-top:8px;} .question{margin:10px 0;page-break-inside:avoid;}
+          .passage{border-left:4px solid #777;padding:8px 12px;margin:10px 0;white-space:pre-line;}
+          .word-bank,.mixed-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;} .bank-item,.shop{border:1px solid #aaa;padding:6px;margin:3px;}
+          .answer-key{page-break-before:always;} textarea{display:none;}
+        </style></head><body>${clone.innerHTML}<section class="answer-key"><h2>Teacher Answer Key</h2>${answerKey}</section></body></html>`;
+      const blob = new Blob(["\ufeff", html], { type: "application/msword;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `GEPT-GSAT-${state.batchLabel}-Version-${state.version}.doc`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function buildAnswerKey() {
+      const rows = [];
+      document.querySelectorAll("[data-question]").forEach(node => {
+        const qno = Number(node.dataset.question);
+        rows.push(`<tr><td>${qno}</td><td>${escapeHtml(getQuestionAnswer(qno))}</td></tr>`);
+      });
+      return `<table border="1" cellspacing="0" cellpadding="5"><tbody>${rows.join("")}</tbody></table>`;
+    }
+
+    function restoreEndpoint() {
+      const saved = localStorage.getItem(STORAGE_ENDPOINT_KEY) || DEFAULT_SHEET_ENDPOINT;
+      document.getElementById("sheetEndpoint").value = saved;
+    }
+
+    document.addEventListener("click", event => {
+      const option = event.target.closest(".option");
+      if (option) handleChoice(option);
+      const textCheck = event.target.closest("[data-check-text]");
+      if (textCheck) checkText(Number(textCheck.dataset.checkText));
+    });
+
+    document.getElementById("generateBtn").addEventListener("click", generateTest);
+    document.getElementById("downloadDocBtn").addEventListener("click", downloadWordWorksheet);
+    document.getElementById("submitBtn").addEventListener("click", submitResults);
+    document.getElementById("resetBtn").addEventListener("click", generateTest);
+    document.getElementById("printBtn").addEventListener("click", () => window.print());
+    document.getElementById("closeLookup").addEventListener("click", () => document.getElementById("lookupPanel").classList.remove("show"));
+    document.getElementById("sheetEndpoint").addEventListener("change", event => {
+      localStorage.setItem(STORAGE_ENDPOINT_KEY, event.target.value.trim());
+    });
+
+    restoreEndpoint();
+    generateTest();
+  </script>
+</body>
+</html>
